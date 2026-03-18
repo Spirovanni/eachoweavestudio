@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { JSONContent } from "@tiptap/react";
+import type { JSONContent, Editor } from "@tiptap/react";
 import type { Chapter, ChapterStatus } from "@/lib/types";
 import ChapterEditor from "@/components/editor/ChapterEditor";
+import { AIAssistPanel } from "@/components/editor/AIAssistPanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Check, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Check, AlertCircle, Sparkles, PanelRightClose } from "lucide-react";
 
 const CHAPTER_STATUSES: { value: ChapterStatus; label: string }[] = [
   { value: "idea", label: "Idea" },
@@ -41,6 +42,8 @@ export function ChapterEditView({ chapterId }: { chapterId: string }) {
   const [content, setContent] = useState<JSONContent | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadRef = useRef(true);
@@ -204,8 +207,16 @@ export function ChapterEditView({ chapterId }: { chapterId: string }) {
             </SelectContent>
           </Select>
 
-          {/* Save indicator */}
+          {/* AI panel toggle + Save indicator */}
           <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Button
+              variant={showAIPanel ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setShowAIPanel(!showAIPanel)}
+              title="AI Assistant"
+            >
+              {showAIPanel ? <PanelRightClose /> : <Sparkles />}
+            </Button>
             {saveState === "saving" && (
               <>
                 <Loader2 className="size-3 animate-spin" />
@@ -238,25 +249,37 @@ export function ChapterEditView({ chapterId }: { chapterId: string }) {
         </div>
       </div>
 
-      {/* Editor area */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-6 py-6">
-          {/* Title */}
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Chapter title..."
-            className="mb-6 w-full border-none bg-transparent text-3xl font-bold tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
-          />
+      {/* Editor + AI panel */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Editor area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-4xl px-6 py-6">
+            {/* Title */}
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Chapter title..."
+              className="mb-6 w-full border-none bg-transparent text-3xl font-bold tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
+            />
 
-          {/* Rich text editor */}
-          <ChapterEditor
-            content={content as JSONContent | undefined}
-            onUpdate={handleContentChange}
-            placeholder="Start writing your chapter..."
-          />
+            {/* Rich text editor */}
+            <ChapterEditor
+              content={content as JSONContent | undefined}
+              onUpdate={handleContentChange}
+              onEditorReady={setEditorInstance}
+              placeholder="Start writing your chapter..."
+            />
+          </div>
         </div>
+
+        {/* AI Assistant panel */}
+        {showAIPanel && (
+          <AIAssistPanel
+            editor={editorInstance}
+            chapterTitle={title}
+          />
+        )}
       </div>
     </div>
   );

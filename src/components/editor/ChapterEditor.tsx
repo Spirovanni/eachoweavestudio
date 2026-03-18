@@ -6,7 +6,8 @@ import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import UnderlineExtension from "@tiptap/extension-underline";
-import type { JSONContent } from "@tiptap/react";
+import type { JSONContent, Editor } from "@tiptap/react";
+import { useEffect } from "react";
 import { EditorToolbar } from "./EditorToolbar";
 
 interface ChapterEditorProps {
@@ -14,6 +15,8 @@ interface ChapterEditorProps {
   content?: JSONContent | null;
   /** Called whenever the document changes */
   onUpdate?: (content: JSONContent) => void;
+  /** Called with the editor instance when ready */
+  onEditorReady?: (editor: Editor) => void;
   /** Placeholder text shown when editor is empty */
   placeholder?: string;
   /** Whether the editor is read-only */
@@ -23,6 +26,7 @@ interface ChapterEditorProps {
 export default function ChapterEditor({
   content,
   onUpdate,
+  onEditorReady,
   placeholder = "Start writing your chapter...",
   editable = true,
 }: ChapterEditorProps) {
@@ -59,6 +63,12 @@ export default function ChapterEditor({
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
