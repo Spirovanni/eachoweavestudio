@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "eachoweavestudio",
+  "project_id": "260fff6b-97b9-4353-a6f6-5f13c3cd4e2e"
+}
