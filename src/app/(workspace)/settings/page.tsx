@@ -1,13 +1,32 @@
-export default function SettingsPage() {
+import { redirect } from "next/navigation";
+import { getUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
+import { SettingsView } from "./settings-view";
+import type { Profile } from "@/lib/types";
+
+export default async function SettingsPage() {
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Fetch user profile
+  const supabase = await createClient();
+  const { data: profile, error } = await supabase
+    .from("ews_profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single<Profile>();
+
+  if (error || !profile) {
+    console.error("Failed to fetch profile:", error);
+    redirect("/login");
+  }
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Settings
-        </h1>
-        <p className="text-sm text-zinc-500">Project preferences and account management</p>
-      </div>
-      <p className="text-sm text-zinc-500">Settings will be configured here.</p>
+    <div className="container mx-auto max-w-4xl p-6">
+      <SettingsView profile={profile} />
     </div>
   );
 }
