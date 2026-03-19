@@ -6,16 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { User, LogOut, Save, Loader2 } from "lucide-react";
+import { User, LogOut, Save, Loader2, Sparkles } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { AISettingsComponent, type AISettings } from "@/components/settings/ai-settings";
 import type { Profile } from "@/lib/types";
 
 interface SettingsViewProps {
   profile: Profile;
+  projectId: string | null;
+  aiSettings: AISettings;
 }
 
-export function SettingsView({ profile }: SettingsViewProps) {
+export function SettingsView({ profile, projectId, aiSettings }: SettingsViewProps) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
@@ -80,8 +84,23 @@ export function SettingsView({ profile }: SettingsViewProps) {
 
       <Separator />
 
-      {/* Profile Section */}
-      <Card>
+      {/* Tabs */}
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsTrigger value="profile">
+            <User className="mr-2 size-4" />
+            Profile & Account
+          </TabsTrigger>
+          <TabsTrigger value="ai" disabled={!projectId}>
+            <Sparkles className="mr-2 size-4" />
+            AI Settings
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Profile & Account Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          {/* Profile Section */}
+          <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="size-5 text-primary" />
@@ -212,6 +231,23 @@ export function SettingsView({ profile }: SettingsViewProps) {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* AI Settings Tab */}
+        <TabsContent value="ai" className="space-y-6">
+          {projectId ? (
+            <AISettingsComponent projectId={projectId} initialSettings={aiSettings} />
+          ) : (
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-sm text-muted-foreground">
+                  No project selected. Join or create a project to configure AI settings.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
