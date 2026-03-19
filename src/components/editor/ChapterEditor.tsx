@@ -9,6 +9,7 @@ import UnderlineExtension from "@tiptap/extension-underline";
 import type { JSONContent, Editor } from "@tiptap/react";
 import { useEffect } from "react";
 import { EditorToolbar } from "./EditorToolbar";
+import { AIActionMenu } from "./AIActionMenu";
 
 interface ChapterEditorProps {
   /** Initial content as Tiptap JSON */
@@ -21,6 +22,8 @@ interface ChapterEditorProps {
   placeholder?: string;
   /** Whether the editor is read-only */
   editable?: boolean;
+  /** Project ID for AI actions */
+  projectId?: string | null;
 }
 
 export default function ChapterEditor({
@@ -29,6 +32,7 @@ export default function ChapterEditor({
   onEditorReady,
   placeholder = "Start writing your chapter...",
   editable = true,
+  projectId = null,
 }: ChapterEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -74,6 +78,7 @@ export default function ChapterEditor({
     <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
       {editable && <EditorToolbar editor={editor} />}
       <EditorContent editor={editor} />
+      {editable && <AIActionMenu editor={editor} projectId={projectId} />}
     </div>
   );
 }

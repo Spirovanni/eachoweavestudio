@@ -288,6 +288,7 @@ export function ChapterEditView({ chapterId }: { chapterId: string }) {
               onUpdate={handleContentChange}
               onEditorReady={setEditorInstance}
               placeholder="Start writing your chapter..."
+              projectId={chapter.project_id}
             />
           </div>
         </div>
