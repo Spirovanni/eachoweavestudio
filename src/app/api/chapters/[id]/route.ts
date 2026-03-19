@@ -34,6 +34,7 @@ export async function GET(
 /**
  * PATCH /api/chapters/[id]
  * Update a chapter. Body: { title?, summary?, content?, status?, order_index? }
+ * Automatically creates a revision snapshot when content changes.
  */
 export async function PATCH(
   request: NextRequest,
@@ -43,10 +44,10 @@ export async function PATCH(
   const { supabase, user, error } = await getAuthenticatedClient();
   if (error) return error;
 
-  // Verify chapter exists and user has access
+  // Fetch full chapter to check for content changes
   const { data: existing, error: fetchError } = await supabase!
     .from("ews_chapters")
-    .select("project_id")
+    .select("*")
     .eq("id", id)
     .single();
 
@@ -73,6 +74,22 @@ export async function PATCH(
       { error: "No valid fields to update" },
       { status: 400 }
     );
+  }
+
+  // Create revision if content has changed
+  const contentChanged =
+    updates.content !== undefined &&
+    JSON.stringify(updates.content) !== JSON.stringify(existing.content);
+
+  if (contentChanged && existing.content) {
+    // Store the previous content as a revision
+    await supabase!.from("ews_chapter_revisions").insert({
+      chapter_id: id,
+      content: existing.content,
+      title: existing.title,
+      summary: "Auto-saved revision",
+      edited_by: user!.id,
+    });
   }
 
   const { data, error: dbError } = await supabase!
