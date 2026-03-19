@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthenticatedClient, verifyProjectAccess } from "@/lib/api/helpers";
+import { requireProjectAdmin } from "@/lib/auth/roles";
 
 /**
  * GET /api/settings?project_id=...
@@ -82,16 +83,11 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Verify user is an admin of the project
-  const { data: membership } = await supabase!
-    .from("ews_project_members")
-    .select("role")
-    .eq("project_id", project_id)
-    .eq("user_id", user!.id)
-    .single();
-
-  if (!membership || membership.role !== "admin") {
+  try {
+    await requireProjectAdmin(supabase!, user!.id, project_id);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Admin access required to update project settings" },
+      { error: error instanceof Error ? error.message : "Admin access required" },
       { status: 403 }
     );
   }
