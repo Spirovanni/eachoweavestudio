@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ContentRenderer } from "@/components/editor/ContentRenderer";
+import { ChapterDetailTabs } from "./chapter-detail-tabs";
 import { Pencil, ArrowLeft } from "lucide-react";
 import type { Chapter } from "@/lib/types";
 import type { JSONContent } from "@tiptap/react";
@@ -74,24 +75,8 @@ export default async function ChapterDetailPage({
 
       <Separator className="mb-6" />
 
-      {/* Content */}
-      <div className="mx-auto max-w-4xl">
-        {chapter.content ? (
-          <ContentRenderer
-            content={chapter.content as unknown as JSONContent}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No content yet.{" "}
-            <Link
-              href={`/chapters/${id}/edit`}
-              className="text-primary underline underline-offset-4"
-            >
-              Start writing
-            </Link>
-          </p>
-        )}
-      </div>
+      {/* Content & Revisions */}
+      <ChapterDetailTabs chapterId={id} content={chapter.content as unknown as JSONContent | null} />
     </div>
   );
 }
