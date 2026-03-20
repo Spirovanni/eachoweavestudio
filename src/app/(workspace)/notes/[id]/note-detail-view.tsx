@@ -12,12 +12,14 @@ import { CommentThread } from "@/components/comments/CommentThread";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  ArrowRightLeft,
   Pencil,
   X,
   Check,
   StickyNote,
   Trash2,
 } from "lucide-react";
+import { NoteConversionDialog } from "@/components/notes/NoteConversionDialog";
 
 interface Note {
   id: string;
@@ -43,6 +45,7 @@ export function NoteDetailView({ note, userId }: NoteDetailViewProps) {
   const [tagsInput, setTagsInput] = useState(note.tags?.join(", ") ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [conversionOpen, setConversionOpen] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -144,14 +147,24 @@ export function NoteDetailView({ note, userId }: NoteDetailViewProps) {
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => setEditing(true)}
+                title="Edit note"
               >
                 <Pencil />
               </Button>
               <Button
                 variant="ghost"
                 size="icon-sm"
+                onClick={() => setConversionOpen(true)}
+                title="Convert to content"
+              >
+                <ArrowRightLeft />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={handleDelete}
                 disabled={deleting}
+                title="Delete note"
               >
                 <Trash2 />
               </Button>
@@ -226,6 +239,12 @@ export function NoteDetailView({ note, userId }: NoteDetailViewProps) {
           currentUserId={userId}
         />
       </section>
+
+      <NoteConversionDialog
+        note={note}
+        open={conversionOpen}
+        onOpenChange={setConversionOpen}
+      />
     </div>
   );
 }
