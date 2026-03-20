@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContentRenderer } from "@/components/editor/ContentRenderer";
-import { History, Loader2, FileText, Eye } from "lucide-react";
+import { RevisionDiffViewer } from "./RevisionDiffViewer";
+import { History, Loader2, FileText, Eye, GitCompareArrows } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 
 interface Revision {
@@ -47,6 +48,9 @@ export function RevisionHistory({ chapterId }: RevisionHistoryProps) {
     useState<RevisionWithContent | null>(null);
   const [isLoadingRevision, setIsLoadingRevision] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"view" | "diff">("view");
+  const [compareRevision, setCompareRevision] =
+    useState<RevisionWithContent | null>(null);
 
   const PAGE_SIZE = 10;
 

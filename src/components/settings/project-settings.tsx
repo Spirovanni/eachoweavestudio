@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Save, Users, Settings as SettingsIcon, Info } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProjectMember {
   userId: string;
@@ -41,6 +51,7 @@ interface ProjectSettingsProps {
   initialProject: Project;
   initialMembers: ProjectMember[];
   initialSettings: ProjectSettings;
+  currentUserId: string;
 }
 
 export function ProjectSettingsComponent({
@@ -48,6 +59,7 @@ export function ProjectSettingsComponent({
   initialProject,
   initialMembers,
   initialSettings,
+  currentUserId,
 }: ProjectSettingsProps) {
   const [title, setTitle] = useState(initialProject.title);
   const [description, setDescription] = useState(initialProject.description || "");
@@ -55,6 +67,10 @@ export function ProjectSettingsComponent({
   const [publishingEnabled, setPublishingEnabled] = useState(initialSettings.publishing_enabled);
   const [aiEnabled, setAiEnabled] = useState(initialSettings.ai_enabled);
   const [collaborationEnabled, setCollaborationEnabled] = useState(initialSettings.collaboration_enabled);
+
+  const [pendingAdultToggle, setPendingAdultToggle] = useState(false);
+
+  const isAdmin = initialMembers.find((m) => m.userId === currentUserId)?.role === "admin";
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -252,10 +268,22 @@ export function ProjectSettingsComponent({
               <p className="text-xs text-muted-foreground">
                 Enable mature/adult content features
               </p>
+              {!isAdmin && (
+                <p className="mt-1 text-xs text-destructive">
+                  Only project admins can change this setting.
+                </p>
+              )}
             </div>
             <Switch
+              disabled={!isAdmin}
               checked={adultModuleEnabled}
-              onCheckedChange={setAdultModuleEnabled}
+              onCheckedChange={(checked) => {
+                if (checked && !initialSettings.adult_module_enabled) {
+                  setPendingAdultToggle(true);
+                } else {
+                  setAdultModuleEnabled(checked);
+                }
+              }}
             />
           </div>
         </CardContent>
@@ -329,6 +357,30 @@ export function ProjectSettingsComponent({
           </Button>
         )}
       </div>
+
+      <AlertDialog open={pendingAdultToggle} onOpenChange={setPendingAdultToggle}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable Adult Content Module?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Warning: You are about to enable adult content generation for this project.
+              This will permit the AI to generate explicit, 18+ content when requested.
+              Are you sure you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setAdultModuleEnabled(true);
+              }}
+            >
+              Enable
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

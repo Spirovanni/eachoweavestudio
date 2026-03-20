@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Sparkles,
   Loader2,
@@ -103,6 +105,25 @@ export function AIGenerateDialog({
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
+  const [adultModuleEnabled, setAdultModuleEnabled] = useState(false);
+  const [includeExplicit, setIncludeExplicit] = useState(false);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      if (!projectId) return;
+      try {
+        const res = await fetch(`/api/settings?project_id=${projectId}`);
+        if (res.ok) {
+          const { data } = await res.json();
+          setAdultModuleEnabled(!!data?.adult_module_enabled);
+        }
+      } catch (err) {
+        console.error("Failed to fetch project settings", err);
+      }
+    }
+    fetchSettings();
+  }, [projectId]);
+
   // Form state
   const [genre, setGenre] = useState("");
   const [tone, setTone] = useState("");
@@ -133,6 +154,7 @@ export function AIGenerateDialog({
     const base: Record<string, unknown> = {
       stream: true,
       project_id: projectId || undefined,
+      includeExplicit: includeExplicit || undefined,
     };
 
     switch (activeTool) {
@@ -186,6 +208,7 @@ export function AIGenerateDialog({
     concept,
     chapterCount,
     projectId,
+    includeExplicit,
   ]);
 
   const canGenerate = useCallback(() => {
@@ -502,8 +525,29 @@ export function AIGenerateDialog({
             </TabsContent>
           </Tabs>
 
-          {/* Generate button */}
-          <div className="flex items-center gap-2">
+          {/* Mature Toggle Option */}
+          <div className="flex flex-col gap-4">
+            {adultModuleEnabled && (
+              <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="explicit-content" className="text-sm font-medium text-destructive flex items-center gap-2">
+                    Allow Explicit Content
+                    <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">Adult Module Active</Badge>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    This permits the AI to generate mature, 18+ content based on your prompt.
+                  </p>
+                </div>
+                <Switch
+                  id="explicit-content"
+                  checked={includeExplicit}
+                  onCheckedChange={setIncludeExplicit}
+                />
+              </div>
+            )}
+
+            {/* Generate button */}
+            <div className="flex items-center gap-2">
             <Button
               onClick={handleGenerate}
               disabled={generating || !canGenerate()}
@@ -534,6 +578,7 @@ export function AIGenerateDialog({
             <Badge variant="outline" className="ml-auto text-xs">
               {TOOLS[activeTool].label}
             </Badge>
+          </div>
           </div>
 
           {/* Output area */}

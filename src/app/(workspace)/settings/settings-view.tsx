@@ -249,6 +249,7 @@ export function SettingsView({ profile, projectId, project, projectMembers, proj
               initialProject={project}
               initialMembers={projectMembers}
               initialSettings={projectSettings}
+              currentUserId={profile.id}
             />
           ) : (
             <Card>

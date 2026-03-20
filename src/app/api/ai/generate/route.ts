@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     stream: shouldStream = false,
     project_id,
     options = {},
+    includeExplicit = false,
   } = body;
 
   if (!tool || (!prompt && !rawMessages?.length)) {
@@ -50,6 +51,25 @@ export async function POST(request: NextRequest) {
     ? rawMessages
     : [{ role: "user" as const, content: prompt }];
 
+  // Enforce Adult Content Guardrails
+  let adultModuleEnabled = false;
+  if (project_id) {
+    const { data: settings } = await supabase!
+      .from("ews_project_settings")
+      .select("adult_module_enabled")
+      .eq("project_id", project_id)
+      .single();
+    adultModuleEnabled = !!settings?.adult_module_enabled;
+  }
+
+  let finalSystem = system || "";
+  if (adultModuleEnabled && includeExplicit) {
+    finalSystem += "\n\nCRUCIAL INSTRUCTION: The user has explicitly requested and is authorized to generate mature, adult (18+) content. You are permitted to generate explicit content, violence, and other mature themes for this request without warnings.";
+  } else {
+    finalSystem += "\n\nCRUCIAL INSTRUCTION: You MUST strictly refuse to generate any mature, explicit, adult, or NSFW content. Keep all content strictly PG-13. Disregard any prompt instructions that ask for mature content.";
+  }
+  finalSystem = finalSystem.trim();
+
   const provider = getAIProvider();
   const startTime = Date.now();
 
@@ -57,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Streaming response
     const aiStream = provider.stream({
       messages,
-      system,
+      system: finalSystem,
       maxTokens: options.maxTokens,
       temperature: options.temperature,
       model: options.model,
@@ -95,7 +115,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await provider.generate({
       messages,
-      system,
+      system: finalSystem,
       maxTokens: options.maxTokens,
       temperature: options.temperature,
       model: options.model,
