@@ -1,11 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
+import { PublicGallery } from "./public-gallery";
+
+export const metadata: Metadata = {
+  title: "Artwork — Echo Weave Studio",
+  description: "Browse published artwork and illustrations from Echo Weave Studio.",
+};
 
 export default async function PublicImagesPage() {
   const supabase = await createClient();
 
   const { data: images } = await supabase
     .from("ews_images")
-    .select("id, title, image_url, caption, symbolism, created_at")
+    .select("id, title, image_url, caption, created_at")
     .eq("published", true)
     .order("created_at", { ascending: false });
 
@@ -16,30 +23,7 @@ export default async function PublicImagesPage() {
       {!images || images.length === 0 ? (
         <p className="text-muted-foreground">No published artwork yet.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {images.map((image) => (
-            <div
-              key={image.id}
-              className="group overflow-hidden rounded-lg border border-border"
-            >
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={image.image_url}
-                  alt={image.title}
-                  className="size-full object-cover transition-transform group-hover:scale-105"
-                />
-              </div>
-              <div className="p-3 space-y-1">
-                <h3 className="font-medium text-sm">{image.title}</h3>
-                {image.caption && (
-                  <p className="text-xs text-muted-foreground">
-                    {image.caption}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <PublicGallery images={images} />
       )}
     </div>
   );
