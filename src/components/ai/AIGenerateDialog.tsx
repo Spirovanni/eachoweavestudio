@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -289,7 +289,11 @@ export function AIGenerateDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<span />}>{children}</DialogTrigger>
+      {React.isValidElement(children) ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        <DialogTrigger>{children}</DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>AI Generate</DialogTitle>
